@@ -25,7 +25,7 @@ Sử dụng **Playwright + Python** để kiểm thử hệ thống Mượn sác
 | --- | ---- | --------- | ----------- |
 | 1   |      |           | Nhóm trưởng |
 | 2   | 2410014     |Vũ Thành An           | Thành viên  |
-| 3   |      |           | Thành viên  |
+| 3   | 2410783     |Lương Xuân Phúc          | Thành viên  |
 | 4   |      |           | Thành viên  |
 
 ---
