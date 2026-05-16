@@ -27,7 +27,7 @@ Sử dụng **Playwright + Python** để kiểm thử hệ thống Mượn sác
 | 2   | 2410014     |Vũ Thành An           | Thành viên  |
 | 3   | 2410783     |Lương Xuân Phúc          | Thành viên  |
 | 4   | 22BA13240    |Đào Minh Nguyệt           | Thành viên  |
-
+| 5   | 2410553     |Trần Nam Long           | Thành viên  |
 ---
 
 ## 📖 Trước khi bắt đầu — Bối cảnh / Before You Start — Context
