@@ -17,7 +17,7 @@ Sử dụng **Playwright + Python** để kiểm thử hệ thống Mượn sác
 
 |              | Thông tin                    |
 | ------------ | ---------------------------- |
-| **Tên nhóm** |        Nhóm 28               |
+| **Tên nhóm** |        STQA_Group_28         |
 | **Lớp**      |        B2 ICT.01             |
 | **Học kỳ**   |        HK2 2025-2026         |
 
