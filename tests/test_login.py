@@ -52,9 +52,7 @@ def test_login_success(page, test_config):
 def test_login_fail_wrong_password(page, test_config):
     """TC-02: Login fail – wrong password (*Đăng nhập thất bại – sai mật khẩu*)
 
-    🔴 NOT COMPLETED — Students must implement this test case.
-    (*CHƯA HOÀN THÀNH — Sinh viên cần viết code cho test case này.*)
-
+    ✅ COMPLETED — Students must implement this test case.
     Description (*Mô tả*):
         Enter correct email but wrong password → system stays on login page
         or shows an error message.
@@ -89,16 +87,34 @@ def test_login_fail_wrong_password(page, test_config):
         6. Assert: URL still on login page OR error message shown
            (*Assert: URL vẫn ở trang đăng nhập HOẶC có thông báo lỗi*)
     """
-    # TODO: Students implement here (Sinh viên viết code ở đây)
-    pytest.skip("Not implemented — student must complete (Chưa hoàn thành)")
+    # TODO: 
+    # [R] Navigate to login page
+    page.goto(test_config["base_url"], wait_until="networkidle", timeout=60000)
+    enable_flutter_semantics(page)
+
+    # [I] Enter valid email, WRONG password
+    flutter_fill(page, "Email", test_config["email"])
+    flutter_fill(page, "Mật khẩu", "sai_mat_khau_invalid_999")
+    flutter_click_button(page, "Đăng nhập")
+
+    # [P] Wait for the error message to appear (Smart Wait)
+    wait_for_flutter(page, text="Mật khẩu không đúng")
+    page.screenshot(path=os.path.join(SCREENSHOT_DIR, "login_fail_wrong_password.png"))
+
+    # [R] Verify: error message is displayed, and login did NOT succeed
+    sem_text = " ".join(page.locator("flt-semantics").all_text_contents())
+    assert "Mật khẩu không đúng" in sem_text, (
+        f"Expected error 'Mật khẩu không đúng' not found. Got: {sem_text[:200]}"
+    )
+    assert "Đăng xuất" not in sem_text, (
+        "User should NOT be logged in after wrong password"
+    )
 
 
 def test_login_fail_empty_fields(page, test_config):
     """TC-03: Login fail – empty fields (*Đăng nhập thất bại – để trống các trường*)
 
-    🔴 NOT COMPLETED — Students must implement this test case.
-    (*CHƯA HOÀN THÀNH — Sinh viên cần viết code cho test case này.*)
-
+    ✅ COMPLETED — Students must implement this test case.
     Description (*Mô tả*):
         Leave all fields empty, click Login → system stays on login page.
         (*Không nhập gì, bấm Đăng nhập → hệ thống không chuyển trang.*)
@@ -110,5 +126,25 @@ def test_login_fail_empty_fields(page, test_config):
            (*KHÔNG nhập Email/Mật khẩu — click "Đăng nhập" ngay*)
         4. Assert: URL still on login page (*Assert: URL vẫn ở trang đăng nhập*)
     """
-    # TODO: Students implement here (Sinh viên viết code ở đây)
+    # TODO: 
+    # [R] Navigate to login page
+    page.goto(test_config["base_url"], wait_until="networkidle", timeout=60000)
+    enable_flutter_semantics(page)
+
+    # [I] Enter nothing — click Login immediately
+    flutter_click_button(page, "Đăng nhập")
+
+    # [P] Wait for validation message (Smart Wait)
+    wait_for_flutter(page, text="Vui lòng nhập")
+    page.screenshot(path=os.path.join(SCREENSHOT_DIR, "login_fail_empty_fields.png"))
+
+    # [R] Verify: validation message is shown, user is not logged in
+    sem_text = " ".join(page.locator("flt-semantics").all_text_contents())
+    assert "Vui lòng nhập" in sem_text, (
+        f"Expected validation error not found. Got: {sem_text[:200]}"
+    )
+    assert "Đăng xuất" not in sem_text, (
+        "User should NOT be logged in when fields are empty"
+    )
+
     pytest.skip("Not implemented — student must complete (Chưa hoàn thành)")
