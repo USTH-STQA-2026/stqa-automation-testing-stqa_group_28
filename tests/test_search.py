@@ -172,3 +172,50 @@ def test_search_by_author(page, test_config):
     assert results.count() > 0 or "Nguyễn Minh Đức" in sem_text, (
         "No results found for author 'Nguyễn Minh Đức' — expected BOOK001, BOOK009"
     )
+
+# ---------------------------------------------------------------------------
+# BONUS B1 — Extra TC: Case-insensitive search
+# REQ-03 requires search to be case-insensitive
+# ---------------------------------------------------------------------------
+
+def test_search_case_insensitive(page, test_config):
+    """BONUS TC-Extra-02: Case-insensitive search
+
+    REQ-03: Search must be case-insensitive.
+    Searching for 'FLUTTER' should yield the same results as searching for 'Flutter'.
+
+    Expected: Books containing 'Flutter' are displayed.
+    Actual (BUG-AUTO-01): System returns 'Không tìm thấy sách nào' — case-sensitive bug.
+
+    RIPR:
+        [R] Log in, navigate to Books tab (books with 'Flutter' exist in system)
+        [I] Enter 'FLUTTER' (all uppercase) into the search bar
+        [P] System processes the search query
+        [R] Assert books containing 'Flutter' are shown (REQ-03 requires case-insensitive)
+    """
+    # [R] Arrange: Log in
+    login(page, test_config)
+
+    # [I] Act: Search using ALL UPPERCASE to test case-insensitivity
+    flutter_fill(page, "Tìm kiếm theo tên sách hoặc tác giả...", "FLUTTER")
+
+    # [P] Smart Wait: wait for the system to respond.
+    # If REQ-03 is satisfied: "Flutter" books appear → wait succeeds.
+    # If BUG-AUTO-01 exists: "Không tìm thấy sách nào" appears → wait on that instead.
+    try:
+        page.locator(
+            'flt-semantics[aria-label*="Flutter"], flt-semantics:has-text("Không tìm thấy")'
+        ).first.wait_for(state="attached", timeout=10000)
+    except Exception:
+        page.wait_for_timeout(2000)  # fallback wait
+
+    # Always capture screenshot regardless of result (evidence of bug or pass)
+    page.screenshot(path=os.path.join(SCREENSHOT_DIR, "search_case_insensitive.png"))
+
+    # [R] Assert: books with 'Flutter' must be visible (REQ-03 case-insensitive requirement)
+    sem_text = " ".join(page.locator("flt-semantics").all_text_contents())
+    assert "Flutter" in sem_text, (
+        "Search 'FLUTTER' (uppercase) should still find 'Flutter' books — "
+        "REQ-03 requires case-insensitive search. "
+        "BUG-AUTO-01: System is case-sensitive, 'FLUTTER' returns no results."
+    )
