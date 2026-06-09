@@ -17,17 +17,17 @@ Sử dụng **Playwright + Python** để kiểm thử hệ thống Mượn sác
 
 |              | Thông tin                    |
 | ------------ | ---------------------------- |
-| **Tên nhóm** |        STQA_Group_28         |
-| **Lớp**      |        B2 ICT.01             |
-| **Học kỳ**   |        HK2 2025-2026         |
+| **Tên nhóm** | STQA_Group_28 |
+| **Lớp**      |   B2 ICT.01   |
+| **Học kỳ**   | HK2 2025-2026 |
 
 | #   | MSSV | Họ và tên | Vai trò     |
 | --- | ---- | --------- | ----------- |
-| 1   | 2410643     |Phạm Duy Minh           | Nhóm trưởng |
-| 2   | 2410014     |Vũ Thành An           | Thành viên  |
-| 3   | 2410783     |Lương Xuân Phúc          | Thành viên  |
-| 4   | 22BA13240    |Đào Minh Nguyệt           | Thành viên  |
-| 5   | 2410553     |Trần Nam Long           | Thành viên  |
+| 1   |  2410643  |  Phạm Duy Minh  | Nhóm trưởng |
+| 2   |  2410014  |   Vũ Thành An   | Thành viên  |
+| 3   |  2410783  | Lương Xuân Phúc | Thành viên  |
+| 4   |  2410553  |  Trần Nam Long  | Thành viên  |
+| 5   | 22BA13240 | Đào Minh Nguyệt | Thành viên  |
 ---
 
 ## 📖 Trước khi bắt đầu — Bối cảnh / Before You Start — Context
@@ -188,17 +188,17 @@ CI sẽ thực hiện:
 | TC    | Mô tả                                                | File                    | Trạng thái |
 | ----- | ---------------------------------------------------- | ----------------------- | ---------- |
 | TC-01 | Đăng nhập thành công (*Login success*)               | `test_login.py`         | ✅ Mẫu      |
-| TC-02 | Đăng nhập thất bại — sai mật khẩu (*Wrong password*) | `test_login.py`         | ✅ COMPLETED     |
-| TC-03 | Đăng nhập thất bại — để trống (*Empty fields*)       | `test_login.py`         | ✅ COMPLETED     |
-| TC-04 | Tìm sách theo tên (*Search by name*)                 | `test_search.py`        | ✅ COMPLETED     |
-| TC-05 | Tìm sách — không có kết quả (*No result*)            | `test_search.py`        | ✅ COMPLETED     |
-| TC-06 | Lọc theo thể loại (*Filter by category*)             | `test_search.py`        | ✅ COMPLETED     |
-| TC-07 | Tìm theo tác giả (*Search by author*)                | `test_search.py`        | ✅ COMPLETED     |
-| TC-08 | Mượn sách (*Borrow a book*)                          | `test_borrow_return.py` | 🔴 TODO     |
-| TC-09 | Xem sách đang mượn (*View borrowed books*)           | `test_borrow_return.py` | 🔴 TODO     |
-| TC-10 | Trả sách (*Return a book*)                           | `test_borrow_return.py` | 🔴 TODO     |
-| TC-11 | Đăng xuất (*Logout*)                                 | `test_general.py`       | 🔴 TODO     |
-| TC-12 | Chuyển ngôn ngữ sang EN (*Switch language*)          | `test_general.py`       | 🔴 TODO     |
+| TC-02 | Đăng nhập thất bại — sai mật khẩu (*Wrong password*) | `test_login.py`         | ✅ COMPLETE |
+| TC-03 | Đăng nhập thất bại — để trống (*Empty fields*)       | `test_login.py`         | ✅ COMPLETE |
+| TC-04 | Tìm sách theo tên (*Search by name*)                 | `test_search.py`        | ✅ COMPLETE |
+| TC-05 | Tìm sách — không có kết quả (*No result*)            | `test_search.py`        | ✅ COMPLETE |
+| TC-06 | Lọc theo thể loại (*Filter by category*)             | `test_search.py`        | ✅ COMPLETE |
+| TC-07 | Tìm theo tác giả (*Search by author*)                | `test_search.py`        | ✅ COMPLETE |
+| TC-08 | Mượn sách (*Borrow a book*)                          | `test_borrow_return.py` | ✅ COMPLETE |
+| TC-09 | Xem sách đang mượn (*View borrowed books*)           | `test_borrow_return.py` | ✅ COMPLETE |
+| TC-10 | Trả sách (*Return a book*)                           | `test_borrow_return.py` | ✅ COMPLETE |
+| TC-11 | Đăng xuất (*Logout*)                                 | `test_general.py`       | ✅ COMPLETE |
+| TC-12 | Chuyển ngôn ngữ sang EN (*Switch language*)          | `test_general.py`       | ✅ COMPLETE |
 
 **Yêu cầu:** Hoàn thành tất cả 11 test case còn lại (TC-02 → TC-12).
 
