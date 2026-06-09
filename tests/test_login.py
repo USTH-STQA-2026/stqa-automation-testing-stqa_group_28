@@ -55,9 +55,9 @@ def test_login_success(page, test_config):
 def test_login_fail_wrong_password(page, test_config):
     """TC-02: Login fail – wrong password (*Đăng nhập thất bại – sai mật khẩu*)
 
-    🔴 NOT COMPLETED — Students must implement this test case.
-    (*CHƯA HOÀN THÀNH — Sinh viên cần viết code cho test case này.*)
-
+    ✅ COMPLETE — Students have implemented this test case.
+    (*HOÀN THÀNH — Sinh viên đã viết code cho test case này.*)
+    
     Description (*Mô tả*):
         Enter correct email but wrong password → system stays on login page
         or shows an error message.
@@ -115,8 +115,8 @@ def test_login_fail_wrong_password(page, test_config):
 def test_login_fail_empty_fields(page, test_config):
     """TC-03: Login fail – empty fields (*Đăng nhập thất bại – để trống các trường*)
 
-    🔴 NOT COMPLETED — Students must implement this test case.
-    (*CHƯA HOÀN THÀNH — Sinh viên cần viết code cho test case này.*)
+    ✅ COMPLETE — Students have implemented this test case.
+    (*HOÀN THÀNH — Sinh viên đã viết code cho test case này.*)
 
     Description (*Mô tả*):
         Leave all fields empty, click Login → system stays on login page.
