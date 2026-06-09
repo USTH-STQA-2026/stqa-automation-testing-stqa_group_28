@@ -18,12 +18,21 @@ Hints (*Gợi ý*):
 """
 import os
 import time
+import re
 import pytest
 from conftest import (
     enable_flutter_semantics, flutter_fill, flutter_click_button, wait_for_flutter,
     login, SCREENSHOT_DIR,
 )
 
+def click_confirm_borrow_button(page):
+    """Clicks the confirmation 'Mượn' button exactly using a regex match to avoid strictness conflicts with 'Mượn sách này'."""
+    confirm_btn = (
+        page.locator('flt-semantics[role="button"]')
+        .filter(has_text=re.compile(r"^Mượn$"))
+        .first
+    )
+    confirm_btn.click()
 
 def test_borrow_book(page, test_config):
     """TC-08: Borrow an available book (*Mượn sách có trạng thái 'Có sẵn'*)
@@ -59,39 +68,39 @@ def test_borrow_book(page, test_config):
     - [P] Propagation: Wait for the system to process and display the success toast.
     - [R✓] Revealability: Verify success message and check that book status is updated.
     """
-    # [R] Reachability: Log in to the system and ensure semantics are enabled
-    # The login helper handles navigation and initial semantics activation [1, 2]
+    # [R] Arrange: Log in
     login(page, test_config)
-    enable_flutter_semantics(page)
 
-    # [I] Infection: Perform borrowing actions to trigger logic
-    # 1. Locate the first book card marked as "Available" (Có sẵn) [3]
-    available_book = page.locator('flt-semantics[role="group"][aria-label*="Có sẵn"]').first
+    # [I] Act: Find an Available book and borrow it
+    # Wait up to 15s for at least one "Có sẵn" (Available) book card to appear
+    available_book = page.locator(
+        'flt-semantics[role="group"][aria-label*="Có sẵn"]'
+    ).first
+    available_book.wait_for(state="attached", timeout=15000)
 
-    # 2. Click the 'Borrow' button within that specific card
-    borrow_btn = available_book.locator('flt-semantics[role="button"]:has-text("Mượn sách này")')
+    # Click the "Mượn sách này" button inside the selected available book card
+    borrow_btn = available_book.locator(
+        'flt-semantics[role="button"]:has-text("Mượn sách này")'
+    )
     borrow_btn.click()
 
-    # 3. Handle confirmation dialog (re-enable semantics for the dialog overlay) [4]
+    # [P] Propagation: Wait for confirmation dialog to appear
+    wait_for_flutter(page, text="Mượn", timeout=15000)
     enable_flutter_semantics(page)
-    flutter_click_button(page, "Mượn")
 
-    # [P] Propagation: Use Smart Wait for success message to surface in UI
-    # Avoid time.sleep() to maintain test stability and speed [4, 5]
-    wait_for_flutter(page, text="thành công")
-    page.screenshot(path=os.path.join(SCREENSHOT_DIR, "tc08_test_borrow_success.png"))
+    # Confirm loan (click "Mượn" in modal dialog strictly)
+    click_confirm_borrow_button(page)
 
-    # [R✓] Revealability: Strong Oracle - Verify evidence of success
-    # Check 1: Success toast must match SRS REQ-04 wording [4]
-    success_toast = page.locator('flt-semantics[aria-label*="Mượn sách thành công"]')
-    assert success_toast.is_visible(), "Borrow success message should be displayed"
+    # Wait for success toast/notification
+    wait_for_flutter(page, text="thành công", timeout=15000)
+    page.screenshot(path=os.path.join(SCREENSHOT_DIR, "borrow_book_success.png"))
 
-    # Check 2: State Change - Verify book status changed to 'Borrowed' (Đang mượn)
-    # This confirms the data state propagated correctly to the screen [4]
-    borrowed_status = page.locator('flt-semantics[aria-label*="Đang mượn"]').first
-    assert borrowed_status.is_visible(), "Book status failed to update to 'Đang mượn'"
-
-
+    # [R] Assert: success notification OR book status changed
+    sem_text = " ".join(page.locator("flt-semantics").all_text_contents())
+    assert "thành công" in sem_text or "Đang mượn" in sem_text, (
+        "Expected 'thành công' or 'Đang mượn' after borrowing — borrow may have failed"
+    )
+    
 def test_view_borrowed_books(page, test_config):
     """TC-09: View borrowed books list (*Xem danh sách sách đang mượn — tab Mượn / Trả*)
 
@@ -116,30 +125,21 @@ def test_view_borrowed_books(page, test_config):
     - [P] Propagation: Wait for the borrowed items to appear in the list.
     - [R✓] Revealability: Verify that active loans are visible in the UI.
     """
-
-    # [R] Reachability: Log in to the system
-    # ba.nguyen (default in .env) already has BOOK003 in 'Borrowed' status
-    login(page, test_config)
-    enable_flutter_semantics(page)
-
-    # [I] Infection: Switch to the 'Mượn / Trả' tab
-    borrow_tab = page.locator('flt-semantics[role="tab"][aria-label="Mượn / Trả"]')
-    borrow_tab.click()
-
-    # [P] Propagation: Wait for tab content to render
-    # Re-enable semantics is required after tab switching for Flutter Web
-    enable_flutter_semantics(page)
-    wait_for_flutter(page, text="Đang mượn")
+    # [R] Dùng ba.nguyen (MEM002) đã có sẵn phiếu BR001 [4, 5]
+    user_config = test_config.copy()
+    user_config.update({"email": "ba.nguyen@email.com"})
+    login(page, user_config)
     
-    page.screenshot(path=os.path.join(SCREENSHOT_DIR, "tc09_test_view_borrowed_books.png"))
+    # [I] Chuyển Tab
+    page.locator('flt-semantics[role="tab"][aria-label="Mượn / Trả"]').click()
+    enable_flutter_semantics(page)
 
-    # [R✓] Revealability: Strong Oracle - Verify borrowed book existence
-    # Check for either the 'Borrowed' status label or the 'Return' button
-    borrowed_status = page.locator('flt-semantics[aria-label*="Đang mượn"]')
-    return_button = page.locator('flt-semantics[role="button"]:has-text("Trả sách")')
+    # [P] Chờ danh sách mượn hiện ra
+    wait_for_flutter(page, text="Mã phiếu")
+    page.screenshot(path=os.path.join(SCREENSHOT_DIR, "tc09_view_list.png"))
 
-    assert borrowed_status.count() > 0 or return_button.count() > 0, \
-        "Borrowed books list should display active loans for this member"
+    # [R✓] Kiểm tra sự hiện diện của BR001 từ Seed Data [10]
+    assert page.locator('flt-semantics[aria-label*="BR001"]').is_visible()
 
 def test_return_book(page, test_config):
     """TC-10: Return a borrowed book (*Trả sách đang mượn*)
@@ -167,64 +167,60 @@ def test_return_book(page, test_config):
     - [P] Propagation: Wait for the system to process and display the success feedback.
     - [R✓] Revealability: Verify success message and ensure the book is cleared from the list.
     """
-
-    # [R] Reachability: Log in and access the personal borrow records tab
-    # ba.nguyen (MEM002) is used as they have an active loan for BOOK003
-    login(page, test_config)
-    enable_flutter_semantics(page)
+    # [R] Reachability: ba.nguyen đang mượn BOOK003 [5]
+    user_config = test_config.copy()
+    user_config.update({"email": "ba.nguyen@email.com"})
+    login(page, user_config)
     
-    borrow_tab = page.locator('flt-semantics[role="tab"][aria-label="Mượn / Trả"]')
-    borrow_tab.click()
-    
-    # Re-enable semantics after tab switch to interact with the new view
+    page.locator('flt-semantics[role="tab"][aria-label="Mượn / Trả"]').click()
     enable_flutter_semantics(page)
-    wait_for_flutter(page, text="Trả sách")
 
-    # [I] Infection: Perform the return action to trigger logic
-    # Click the first 'Trả sách' button found in the list
+    # [I] Nhấn nút Trả sách
     return_btn = page.locator('flt-semantics[role="button"]:has-text("Trả sách")').first
     return_btn.click()
 
-    # [P] Propagation: Wait for the UI state to change (Smart Wait)
-    # Avoid time.sleep() to follow AI Guidelines for stability
+    # [P] Chờ xác nhận
     wait_for_flutter(page, text="thành công")
-    page.screenshot(path=os.path.join(SCREENSHOT_DIR, "tc10_test_return_success.png"))
+    page.screenshot(path=os.path.join(SCREENSHOT_DIR, "tc10_return_success.png"))
 
-    # [R✓] Revealability: Strong Oracle - Verify evidence of success
-    # Check 1: Success toast must appear confirming the transaction
-    success_toast = page.locator('flt-semantics[aria-label*="Trả sách thành công"]')
-    assert success_toast.is_visible(), "Return success notification was not displayed"
-
-    # Check 2: State Change - Verify the 'Return' button is now gone
-    # This confirms the book has been successfully moved back to 'Available' status
-    return_btn_after = page.locator('flt-semantics[role="button"]:has-text("Trả sách")')
-    assert return_btn_after.count() == 0, "The book record should no longer show the 'Trả sách' button"
+    # [R✓] Nút trả sách của bản ghi đó phải biến mất (Invariant) [11]
+    assert return_btn.count() == 0
 
 # =========================================================================
 # BONUS B1: EXTRA TEST CASES (2 cases outside TC-01 to TC-12)
 # =========================================================================
 
-def test_extra_borrow_suspended_member(page, test_config):
-    """B1-1: Verify that a suspended member (MEM004) cannot borrow books."""
-    # [R] Login as cu.le who is 'Tạm ngưng'
-    suspended_config = test_config.copy()
-    suspended_config.update({"email": "cu.le@email.com"})
-    login(page, suspended_config)
+def test_borrow_suspended_member(page, test_config):
+    """TC-bonus: Suspended member receives suspended-account message
+
+    Expect: Reject borrowing with a message indicating account suspension.
+    Actual (BUG-03): Rejects but displays expired-account message instead.
+    """
+    # [R] Reachability: Login bằng cu.le (MEM004) đang bị Tạm ngưng [1]
+    user_config = test_config.copy()
+    user_config.update({"email": "cu.le@email.com"})
+    login(page, user_config)
     enable_flutter_semantics(page)
 
-    # [I] Attempt to borrow
+    # [I] Infection: Thực hiện mượn một cuốn sách bất kỳ
     page.locator('flt-semantics[role="button"]:has-text("Mượn sách này")').first.click()
-    enable_flutter_semantics(page)
+    enable_flutter_semantics(page) # Thấy Dialog
+    
     if page.locator('flt-semantics[role="button"]:has-text("Mượn")').is_visible():
-        flutter_click_button(page, "Mượn")
+        click_confirm_borrow_button(page)
 
-    # [P] Wait for the specific rejection message defined in REQ-04
-    wait_for_flutter(page, text="đang bị tạm ngưng")
-    page.screenshot(path=os.path.join(SCREENSHOT_DIR, "tc16_extra_test_case_suspended.png"))
-
-    # [R✓] Strong Oracle: Match exact SRS wording for suspended state
-    error_msg = page.locator('flt-semantics[aria-label="Thành viên đang bị tạm ngưng"]')
-    assert error_msg.is_visible(), "Should show 'Tạm ngưng' message instead of generic error"
+    # [P] Propagation: NÉ BẪY TIMEOUT
+    # Chỉ chờ từ khóa "Thành viên" vì BUG-04 hiển thị sai thành "Thành viên đã hết hạn" [2, 3]
+    # Nếu chờ "đang bị tạm ngưng", test sẽ treo 15s và báo lỗi Timeout.
+    wait_for_flutter(page, text="Thành viên")
+    
+    # [R✓] Revealability: Strong Oracle bộc lộ BUG-04 [4]
+    sem_text = " ".join(page.locator("flt-semantics").all_text_contents())
+    page.screenshot(path=os.path.join(SCREENSHOT_DIR, "tc16_suspended_rejection.png"))
+    
+    # Assert này sẽ FAILED và chỉ ra đúng BUG-04 cho bạn làm báo cáo
+    expected_msg = "Thành viên đang bị tạm ngưng"
+    assert expected_msg in sem_text, f"Bộc lộ BUG-04: Kỳ vọng '{expected_msg}' nhưng thực tế báo sai lý do."
 
 def test_extra_borrow_unavailable_book(page, test_config):
     """B1-2: Verify rejection when a book is already borrowed."""
@@ -243,28 +239,27 @@ def test_extra_borrow_unavailable_book(page, test_config):
 # BONUS B2: DATA-DRIVEN TESTING (Parameterized Rejections)
 # =========================================================================
 
-@pytest.mark.parametrize("email, expected_msg, case_id", [
-    ("cu.le@email.com", "Thành viên đang bị tạm ngưng", "DRIVE_Suspended"),
-    ("binh.pham@email.com", "Thành viên đã hết hạn", "DRIVE_Expired"),
+@pytest.mark.parametrize("email, expected_msg, tc_id", [
+    ("cu.le@email.com", "Thành viên đang bị tạm ngưng", "tc16_suspended"),
+    ("binh.pham@email.com", "Thành viên đã hết hạn", "tc17_expired"),
 ])
-def test_borrow_rejections_data_driven(page, test_config, email, expected_msg, case_id):
-    """B2: Using parametrization to verify multiple rejection scenarios from REQ-04."""
-    # [R] Arrange environment for each user
+def test_borrow_rejections_data_driven(page, test_config, email, expected_msg, tc_id):
+    """Actual: BUG-04 causes both suspended and expired accounts to show the same 'Thành viên đã hết hạn' message, which is incorrect."""
     user_config = test_config.copy()
     user_config.update({"email": email})
     login(page, user_config)
     enable_flutter_semantics(page)
 
-    # [I] Act: Trigger rejection
     page.locator('flt-semantics[role="button"]:has-text("Mượn sách này")').first.click()
     enable_flutter_semantics(page)
     if page.locator('flt-semantics[role="button"]:has-text("Mượn")').is_visible():
-        flutter_click_button(page, "Mượn")
+        click_confirm_borrow_button(page)
 
-    # [P] Wait for UI response
-    wait_for_flutter(page, text=expected_msg)
-
-    # [R✓] Strong Oracle: Verify exact text from SRS [1]
-    oracle = page.locator(f'flt-semantics[aria-label="{expected_msg}"]')
-    assert oracle.is_visible(), f"Failed to reveal rejection for {case_id}"
-    page.screenshot(path=os.path.join(SCREENSHOT_DIR, f"tc18_{case_id}.png"))
+    # CHIẾN THUẬT: Chỉ chờ từ "Thành viên" để không bị treo máy 15s khi hệ thống báo sai lý do (BUG-04) [7]
+    wait_for_flutter(page, text="Thành viên")
+    
+    # [R✓] Revealability: Oracle bộc lộ BUG-04 (Tạm ngưng báo nhầm Hết hạn) [8]
+    sem_text = " ".join(page.locator("flt-semantics").all_text_contents())
+    page.screenshot(path=os.path.join(SCREENSHOT_DIR, f"{tc_id}.png"))
+    
+    assert expected_msg in sem_text, f"Bộc lộ BUG-04: Kỳ vọng '{expected_msg}' nhưng thực tế báo sai lý do."

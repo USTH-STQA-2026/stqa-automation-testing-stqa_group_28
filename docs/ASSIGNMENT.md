@@ -53,32 +53,32 @@ Sinh viên thực hành viết test tự động cho ứng dụng web thực t�
 | TC | Kịch bản | Trạng thái |
 |----|----------|-----------|
 | TC-01 | Đăng nhập thành công — email + mật khẩu đúng | ✅ Mẫu (đã viết sẵn) |
-| TC-02 | Đăng nhập thất bại — sai mật khẩu → vẫn ở trang đăng nhập | ✅ COMPLETE |
-| TC-03 | Đăng nhập thất bại — bỏ trống cả hai trường → vẫn ở trang đăng nhập | ✅ COMPLETE |
+| TC-02 | Đăng nhập thất bại — sai mật khẩu → vẫn ở trang đăng nhập | ✅ COMPLETED |
+| TC-03 | Đăng nhập thất bại — bỏ trống cả hai trường → vẫn ở trang đăng nhập | ✅ COMPLETED |
 
 ### Nhóm 2: Tìm kiếm & Lọc sách (`tests/test_search.py`)
 
 | TC | Kịch bản | Trạng thái |
 |----|----------|-----------|
-| TC-04 | Tìm sách theo tên — nhập "Flutter" → hiển thị sách có chứa "Flutter" | ✅ COMPLETE |
-| TC-05 | Tìm sách — không có kết quả → hiển thị thông báo phù hợp | ✅ COMPLETE |
-| TC-06 | Lọc sách theo thể loại — nhập "Công nghệ" → chỉ hiển thị sách Công nghệ | ✅ COMPLETE |
-| TC-07 | Tìm sách theo tác giả — nhập tên tác giả → hiển thị sách tương ứng | ✅ COMPLETE |
+| TC-04 | Tìm sách theo tên — nhập "Flutter" → hiển thị sách có chứa "Flutter" | ✅ COMPLETED |
+| TC-05 | Tìm sách — không có kết quả → hiển thị thông báo phù hợp | ✅ COMPLETED |
+| TC-06 | Lọc sách theo thể loại — nhập "Công nghệ" → chỉ hiển thị sách Công nghệ | ✅ COMPLETED |
+| TC-07 | Tìm sách theo tác giả — nhập tên tác giả → hiển thị sách tương ứng | ✅ COMPLETED |
 
 ### Nhóm 3: Mượn & Trả sách (`tests/test_borrow_return.py`)
 
 | TC | Kịch bản | Trạng thái |
 |----|----------|-----------|
-| TC-08 | Mượn sách thành công — chọn sách "Có sẵn" → mượn → sách chuyển "Đã mượn" | 🔴 TODO |
-| TC-09 | Xem danh sách sách đang mượn — vào tab Mượn/Trả → thấy phiếu mượn | 🔴 TODO |
-| TC-10 | Trả sách — nhấn "Trả sách" → sách chuyển về "Có sẵn" | 🔴 TODO |
+| TC-08 | Mượn sách thành công — chọn sách "Có sẵn" → mượn → sách chuyển "Đã mượn" | ✅ COMPLETED |
+| TC-09 | Xem danh sách sách đang mượn — vào tab Mượn/Trả → thấy phiếu mượn | ✅ COMPLETEDO |
+| TC-10 | Trả sách — nhấn "Trả sách" → sách chuyển về "Có sẵn" | ✅ COMPLETED |
 
 ### Nhóm 4: Chức năng chung (`tests/test_general.py`)
 
 | TC | Kịch bản | Trạng thái |
 |----|----------|-----------|
-| TC-11 | Đăng xuất — nhấn nút đăng xuất → trở về trang đăng nhập | 🔴 TODO |
-| TC-12 | Chuyển ngôn ngữ sang English → giao diện hiển thị tiếng Anh | 🔴 TODO |
+| TC-11 | Đăng xuất — nhấn nút đăng xuất → trở về trang đăng nhập | ✅ COMPLETED |
+| TC-12 | Chuyển ngôn ngữ sang English → giao diện hiển thị tiếng Anh | ✅ COMPLETED |
 
 ---
 

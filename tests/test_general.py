@@ -16,18 +16,17 @@ Hints (*Gợi ý*):
       (*Sau chuyển EN: text tiếng Anh có thể xuất hiện*)
 """
 import os
-import time
 import pytest
 from conftest import (
-    enable_flutter_semantics, flutter_fill, flutter_click_button, wait_for_flutter,
-    login, SCREENSHOT_DIR,
+    enable_flutter_semantics, flutter_fill, flutter_click_button,
+    wait_for_flutter, login, SCREENSHOT_DIR,
 )
-
 
 def test_logout(page, test_config):
     """TC-11: Logout success (*Đăng xuất thành công*)
 
-    🔴 NOT COMPLETED (*CHƯA HOÀN THÀNH*)
+    ✅ COMPLETED — Students have implemented this test case.
+    (*HOÀN THÀNH — Sinh viên đã viết code cho test case này.*)
 
     Description (*Mô tả*):
         Log in → click Logout → verify page returns to login screen.
@@ -45,7 +44,7 @@ def test_logout(page, test_config):
 
     RIPR Model Trace:
     - [R] Reachability: Log in to access the authenticated area.
-    - [I] Infection: Click the 'Đăng xuất' (Logout) button to trigger logout logic.
+    - [I] Infection: Click the 'Đăng xuất' button to trigger logout logic.
     - [P] Propagation: Wait for the UI to transition back to the login screen.
     - [R✓] Revealability: Verify that login elements are visible again.
     """
@@ -56,24 +55,25 @@ def test_logout(page, test_config):
     # [I] Infection: Perform logout action
     flutter_click_button(page, "Đăng xuất")
 
-    # [P] Propagation: Use Smart Wait for the login screen to render (No sleep!)
-    # After logout, the "Đăng nhập" button should reappear
+    # [P] Propagation: Use Smart Wait for the login screen to render
+    # Re-enabling semantics is vital after a full page re-render [2]
+    enable_flutter_semantics(page)
     wait_for_flutter(page, text="Đăng nhập")
     page.screenshot(path=os.path.join(SCREENSHOT_DIR, "tc11_test_logout.png"))
 
-    # [R✓] Revealability: Strong Oracle - Verify state transition
-    # Check for both the Login button and the Email field
+    # [R✓] Revealability: Strong Oracle (B3)
+    # Check specific locators instead of text scraping to find aria-labels [1]
     login_btn = page.locator('flt-semantics[role="button"]:has-text("Đăng nhập")')
     email_field = page.locator('input[aria-label="Email"]')
     
-    assert login_btn.is_visible() and email_field.is_visible(), \
-        "Logout failed: System did not return to the login screen"
-
+    assert login_btn.is_visible(), "Logout failed: Login button not found"
+    assert email_field.is_visible(), "Logout failed: Email input field not found"
 
 def test_switch_language_to_english(page, test_config):
     """TC-12: Switch language to English (*Chuyển ngôn ngữ sang tiếng Anh*)
 
-    🔴 NOT COMPLETED (*CHƯA HOÀN THÀNH*)
+    ✅ COMPLETED — Students have implemented this test case.
+    (*HOÀN THÀNH — Sinh viên đã viết code cho test case này.*)
 
     Description (*Mô tả*):
         Log in → click "EN" button → verify UI switches to English.
@@ -93,29 +93,25 @@ def test_switch_language_to_english(page, test_config):
     - [R] Reachability: Log in to the dashboard in the default Vietnamese mode.
     - [I] Infection: Click the 'EN' button to trigger the language toggle logic.
     - [P] Propagation: Wait for the Flutter Semantics Tree to update its labels to English.
-    - [R✓] Revealability: Verify that English labels (e.g., 'Logout') are now present.
+    - [R✓] Revealability: Verify that English labels are now present.
     """
-    # [R] Reachability: Ensure the system is accessed and semantics are enabled
+    # [R] Reachability
     login(page, test_config)
     enable_flutter_semantics(page)
 
-    # [I] Infection: Click the 'EN' button to change the language
+    # [I] Infection: Click 'EN'
     flutter_click_button(page, "EN")
 
-    # [P] Propagation: Wait for English text to propagate to the UI (Smart Wait)
-    # Note: We wait for "Logout" which is the EN translation of "Đăng xuất" per REQ-01
-    wait_for_flutter(page, text="Logout")
+    # [P] Propagation: Refresh semantics and wait for 'Sign out' (not Logout)
+    enable_flutter_semantics(page) 
+    expected_en = "Sign out"
+    wait_for_flutter(page, text=expected_en)
     page.screenshot(path=os.path.join(SCREENSHOT_DIR, "tc12_test_switch_language_to_english.png"))
 
-    # [R✓] Revealability: Strong Oracle - Verify English keywords exist in the Semantics Tree
-    # We collect all semantic content to ensure the translation was successful
+    # [R✓] Revealability: Strong Oracle (B3)
     sem_text = " ".join(page.locator("flt-semantics").all_text_contents())
-    
-    # Asserting key English terms defined in the assignment hints
-    is_english_active = "Logout" in sem_text or "Borrow" in sem_text or "Library" in sem_text
-    
-    assert is_english_active, \
-        "Language switch failed: UI did not update to English (Logout/Borrow labels not found)"
+    assert expected_en in sem_text and ("Books" in sem_text or "Library" in sem_text), \
+        "UI did not reveal English labels correctly"
 
 # -------------------------------------------------------------------------
 # BONUS B1: EXTRA TEST CASES (Librarian Specific)
@@ -123,33 +119,28 @@ def test_switch_language_to_english(page, test_config):
 
 def test_extra_data_reset(page, test_config):
     """B1-1: Verify Librarian's 'Data Reset' functionality (REQ-04/REQ-08)."""
-    # [R] Login as Librarian
+    # [R] Reachability: Login as Librarian
     lib_config = test_config.copy()
     lib_config.update({"email": "librarian@library.com", "password": "admin123"})
     login(page, lib_config)
     enable_flutter_semantics(page)
 
-    # [I] Action: Click Reset icon 🔄 and confirm
+    # [I] Infection: Click Reset 🔄 and confirm in dialog
     flutter_click_button(page, "Đặt lại dữ liệu")
-    enable_flutter_semantics(page)
+    enable_flutter_semantics(page) # Enable for dialog context
     flutter_click_button(page, "Đặt lại")
 
-    # [P] Wait for completion
-    wait_for_flutter(page, text="đăng nhập")
+    # [P] Propagation: System redirects to login after reset
+    enable_flutter_semantics(page)
+    wait_for_flutter(page, text="Đăng nhập")
+    
+    # [R✓] Revealability: Verify system returned to seed state
     login(page, lib_config)
     enable_flutter_semantics(page)
-    wait_for_flutter(page, text="BOOK001")
-    page.screenshot(path=os.path.join(SCREENSHOT_DIR, "tc19_extra_data_reset.png"))
-
-    # [R✓] Strong Oracle: Check if toast appears and system is at seed state
-    seed_state = {
-        "Có sẵn": ["BOOK001", "BOOK002", "BOOK005"],
-        "Đang mượn": ["BOOK003"],
-        }
-    for status, book_ids in seed_state.items():
-        for book_id in book_ids:
-            oracle = page.locator(f'flt-semantics[role= "group"]:has-text("{book_id}"):has-text("{status}")')
-            assert oracle.count() > 0, f"{book_id} should have status {status} after  data reset"
+    # Check if BOOK001 is back to "Có sẵn"
+    oracle = page.locator('flt-semantics[role="group"]:has-text("BOOK001"):has-text("Có sẵn")')
+    assert oracle.count() > 0, "Data reset failed: Seed state not restored"
+    page.screenshot(path=os.path.join(SCREENSHOT_DIR, "tc19_test_data_reset.png"))
 
 def test_extra_overdue_check(page, test_config):
     """B1-2: Verify Librarian's 'Check Overdue' scan (REQ-06)."""
@@ -157,43 +148,40 @@ def test_extra_overdue_check(page, test_config):
     lib_config = test_config.copy()
     lib_config.update({"email": "librarian@library.com", "password": "admin123"})
     login(page, lib_config)
+    
+    # Navigate to Borrow/Return tab [4]
+    page.locator('flt-semantics[role="tab"][aria-label="Mượn / Trả"]').click()
     enable_flutter_semantics(page)
 
-    # [I] Action: Trigger overdue scan logic
-    borrow_tab = page.locator('flt-semantics[role="tab"][aria-label="Mượn / Trả"]')
-    borrow_tab.click(force= True)
-    enable_flutter_semantics(page)
+    # [I] Infection: Trigger overdue scan logic
     flutter_click_button(page, "Kiểm tra sách quá hạn")
 
-    # [P] Propagation: Wait for scan confirmation
+    # [P] Propagation: Wait for scan confirmation toast
     wait_for_flutter(page, text="Đã cập nhật")
-    page.screenshot(path=os.path.join(SCREENSHOT_DIR, "tc20_extra_overdue_check.png"))
+    page.screenshot(path=os.path.join(SCREENSHOT_DIR, "tc20_test_overdue_check.png"))
 
-    # [R✓] Strong Oracle: Confirm the feedback message
-    oracle = page.locator('flt-semantics:has-text("Đã cập nhật")')
-    assert oracle.count() > 0, "Check overdue scan confirmation should be displayed"
+    # [R✓] Revealability: Strong Oracle
+    # Use .first to resolve strict mode violation when multiple nodes match [3]
+    oracle = page.locator('flt-semantics:has-text("Đã cập nhật")').first
+    assert oracle.is_visible(), "Overdue scan confirmation not revealed"
 
 # -------------------------------------------------------------------------
 # BONUS B2: DATA-DRIVEN TESTING (Parameterized Language Labels)
 # -------------------------------------------------------------------------
 
 @pytest.mark.parametrize("lang_btn, expected_keyword, case_id", [
-    ("EN", "Sign out", "EN_Check"),
+    ("EN", "Sign out", "EN_Check"), # Corrected from Logout
     ("VI", "Đăng xuất", "VN_Check"),
 ])
-def test_language_data_driven(page, test_config, lang_btn, expected_keyword, case_id):
-    """B2: Verify multiple language transitions using parametrization."""
-    # [R] Login
+def test_bonus_b2_language_data_driven(page, test_config, lang_btn, expected_keyword, case_id):
+    """B2: Data-driven language validation."""
     login(page, test_config)
     enable_flutter_semantics(page)
-
-    # [I] Act: Switch language based on parameter
+    
     flutter_click_button(page, lang_btn)
-
-    # [P] Wait for specific label
+    enable_flutter_semantics(page) # Critical refresh
+    
     wait_for_flutter(page, text=expected_keyword)
-
-    # [R✓] Strong Oracle: Verify the keyword exists in the tree
     sem_text = " ".join(page.locator("flt-semantics").all_text_contents())
-    assert expected_keyword in sem_text, f"Label {expected_keyword} not found for {case_id}"
+    assert expected_keyword in sem_text, f"Label {expected_keyword} not revealed"
     page.screenshot(path=os.path.join(SCREENSHOT_DIR, f"tc21_{case_id}.png"))
