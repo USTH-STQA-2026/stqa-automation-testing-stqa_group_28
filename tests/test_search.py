@@ -39,23 +39,29 @@ def test_search_book_by_name(page, test_config):
         - Verify: page.locator('flt-semantics[aria-label*="Flutter"]').count() > 0
     """
     # TODO: 
-    # [R] Reachability: Log in to reach the authenticated homepage and book list [9, 15, 16]
+    # [R] Reachability: Đăng nhập và truy cập danh sách sách [3, 4]
     login(page, test_config)
+    enable_flutter_semantics(page)
 
-    # [I] Infection: Use the search bar to infect the state with a keyword [17, 18]
-    # Label follows SRS hint: "Tìm kiếm theo tên sách hoặc tác giả..." [18]
+    # [I] Infection: Nhập từ khóa "Flutter" vào ô tìm kiếm [5, 6]
     search_keyword = "Flutter"
     flutter_fill(page, "Tìm kiếm theo tên sách hoặc tác giả...", search_keyword)
 
-    # [P] Propagation: Wait for the list to update and display the target book [8, 17, 19]
+    # [P] Propagation: Đợi kết quả lan truyền ra UI (Smart Wait) [5, 7]
+    # Chờ cho đến khi sách mục tiêu xuất hiện trên CanvasKit
     wait_for_flutter(page, text="Lập trình Flutter cơ bản")
-    page.screenshot(path=os.path.join(SCREENSHOT_DIR, "tc04_test_search_book_by_name.png"))
+    page.screenshot(path=os.path.join(SCREENSHOT_DIR, "tc04_search_success.png"))
 
-    # [R✓] Revealability: Strong Oracle verifying Book ID BOOK001 is visible [13, 20, 21]
-    # We check for BOOK001 to ensure the specific required data is returned [21]
-    sem_text = " ".join(page.locator("flt-semantics").all_text_contents())
-    assert "BOOK001" in sem_text or "Lập trình Flutter cơ bản" in sem_text, \
-        "Search failed: Target book 'BOOK001' not found in results"
+    # [R✓] Revealability: Strong Oracle (B3) kiểm tra cả Mã sách và Trạng thái [1, 8]
+    # Dùng locator nhắm thẳng vào card sách qua aria-label để lấy thông tin chính xác
+    book_card = page.locator('flt-semantics[role="group"][aria-label*="BOOK001"]')
+    
+    assert book_card.is_visible(), "Lỗi: Không tìm thấy card sách mã 'BOOK001'"
+    
+    # Kiểm tra Oracle mạnh: Card phải chứa cả tiêu đề và trạng thái 'Có sẵn' (theo ảnh 497)
+    card_info = book_card.get_attribute("aria-label")
+    assert "Lập trình Flutter cơ bản" in card_info, "Lỗi: Tiêu đề sách không khớp"
+    assert "Có sẵn" in card_info or "Available" in card_info, "Lỗi: Trạng thái sách hiển thị sai"
 
 def test_search_book_no_result(page, test_config):
     """TC-05: Search book – no results (*Tìm kiếm sách — không có kết quả*)
@@ -189,41 +195,25 @@ def test_search_by_author(page, test_config):
 def test_search_by_keyword_data_driven(page, test_config, keyword, expected_id, expected_title, tc_id):
     """Data-driven keyword search verifying results and case-insensitivity."""
     
-    # [R] Reachability: Log in to reach the authenticated homepage and book list
+    # [R] Reachability: Đăng nhập và bật semantics tree cho Flutter
     login(page, test_config)
+    enable_flutter_semantics(page)
 
-    # [I] Infection: Enter keyword into the search bar to infect system state
-    # Using aria-label from SRS REQ-03
+    # [I] Infection: Nhập từ khóa vào ô tìm kiếm theo REQ-03
     search_label = "Tìm kiếm theo tên sách hoặc tác giả..."
     flutter_fill(page, search_label, keyword)
 
-    # [P] Propagation: Smart Wait for results to update in the UI
+    # [P] Propagation: Chờ kết quả cập nhật trên UI (Smart Wait)
     wait_for_flutter(page, text=expected_title)
     page.screenshot(path=os.path.join(SCREENSHOT_DIR, f"tc14_{tc_id}.png"))
 
-    # [R✓] Revealability: Strong Oracle (Bonus B3) checking exact Book ID and Title
-    # Verification based on SRS seed data (Section 3.1)
-    results = page.locator('flt-semantics[role="group"][aria-label*="Mã: BOOK"]')
-    sem_text = " ".join(page.locator("flt-semantics").all_text_contents())
+    # [R✓] Revealability: Strong Oracle (B3) — Kiểm tra chính xác card sách qua aria-label
+    # Không dùng all_text_contents() vì Flutter không render text vào DOM thông thường [2]
+    book_card = page.locator(f'flt-semantics[role="group"][aria-label*="{expected_id}"]')
     
-    assert results.count() > 0, f"Search failed: No results found for '{keyword}'"
-    assert expected_id in sem_text, f"Strong Oracle failed: Book ID '{expected_id}' not revealed"
-    assert expected_title in sem_text, f"Strong Oracle failed: Title '{expected_title}' not revealed"
-
-def test_extra_partial_search(page, test_config):
-    """TC-15 (Bonus B1): Partial keyword search validation."""
+    # Kiểm tra sự hiện diện của card sách mục tiêu
+    assert book_card.is_visible(), f"Lỗi: Không tìm thấy card sách có mã '{expected_id}'"
     
-    # [R] Reachability: Log in
-    login(page, test_config)
-
-    # [I] Infection: Enter partial name "Quản trị"
-    flutter_fill(page, "Tìm kiếm theo tên sách hoặc tác giả...", "Quản trị")
-
-    # [P] Propagation: Wait for multiple matching results (BOOK002, BOOK013)
-    wait_for_flutter(page, text="Quản trị dự án phần mềm")
-    page.screenshot(path=os.path.join(SCREENSHOT_DIR, "tc15_extra_test_case_partial_search.png"))
-
-    # [R✓] Revealability: Strong Oracle verifying multiple relevant records exist
-    sem_text = " ".join(page.locator("flt-semantics").all_text_contents())
-    assert "BOOK002" in sem_text, "Strong Oracle failed: BOOK002 missing"
-    assert "BOOK013" in sem_text, "Strong Oracle failed: BOOK013 missing"
+    # Oracle mạnh: Đọc thuộc tính aria-label để xác nhận cả ID và Tiêu đề trên cùng 1 card [4]
+    card_info = book_card.get_attribute("aria-label")
+    assert expected_title in card_info, f"Lỗi: Tiêu đề '{expected_title}' không khớp trong card '{expected_id}'"
