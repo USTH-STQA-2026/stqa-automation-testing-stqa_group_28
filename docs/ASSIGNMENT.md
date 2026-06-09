@@ -53,17 +53,17 @@ Sinh viên thực hành viết test tự động cho ứng dụng web thực t�
 | TC | Kịch bản | Trạng thái |
 |----|----------|-----------|
 | TC-01 | Đăng nhập thành công — email + mật khẩu đúng | ✅ Mẫu (đã viết sẵn) |
-| TC-02 | Đăng nhập thất bại — sai mật khẩu → vẫn ở trang đăng nhập | 🔴 TODO |
-| TC-03 | Đăng nhập thất bại — bỏ trống cả hai trường → vẫn ở trang đăng nhập | 🔴 TODO |
+| TC-02 | Đăng nhập thất bại — sai mật khẩu → vẫn ở trang đăng nhập | ✅ COMPLETE |
+| TC-03 | Đăng nhập thất bại — bỏ trống cả hai trường → vẫn ở trang đăng nhập | ✅ COMPLETE |
 
 ### Nhóm 2: Tìm kiếm & Lọc sách (`tests/test_search.py`)
 
 | TC | Kịch bản | Trạng thái |
 |----|----------|-----------|
-| TC-04 | Tìm sách theo tên — nhập "Flutter" → hiển thị sách có chứa "Flutter" | 🔴 TODO |
-| TC-05 | Tìm sách — không có kết quả → hiển thị thông báo phù hợp | 🔴 TODO |
-| TC-06 | Lọc sách theo thể loại — nhập "Công nghệ" → chỉ hiển thị sách Công nghệ | 🔴 TODO |
-| TC-07 | Tìm sách theo tác giả — nhập tên tác giả → hiển thị sách tương ứng | 🔴 TODO |
+| TC-04 | Tìm sách theo tên — nhập "Flutter" → hiển thị sách có chứa "Flutter" | ✅ COMPLETE |
+| TC-05 | Tìm sách — không có kết quả → hiển thị thông báo phù hợp | ✅ COMPLETE |
+| TC-06 | Lọc sách theo thể loại — nhập "Công nghệ" → chỉ hiển thị sách Công nghệ | ✅ COMPLETE |
+| TC-07 | Tìm sách theo tác giả — nhập tên tác giả → hiển thị sách tương ứng | ✅ COMPLETE |
 
 ### Nhóm 3: Mượn & Trả sách (`tests/test_borrow_return.py`)
 
