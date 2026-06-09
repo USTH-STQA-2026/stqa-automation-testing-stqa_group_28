@@ -130,16 +130,26 @@ def test_extra_data_reset(page, test_config):
     enable_flutter_semantics(page)
 
     # [I] Action: Click Reset icon 🔄 and confirm
-    flutter_click_button(page, "🔄")
+    flutter_click_button(page, "Đặt lại dữ liệu")
     enable_flutter_semantics(page)
     flutter_click_button(page, "Đặt lại")
 
     # [P] Wait for completion
-    wait_for_flutter(page, text="thành công")
+    wait_for_flutter(page, text="đăng nhập")
+    login(page, lib_config)
+    enable_flutter_semantics(page)
+    wait_for_flutter(page, text="BOOK001")
     page.screenshot(path=os.path.join(SCREENSHOT_DIR, "tc19_extra_data_reset.png"))
 
     # [R✓] Strong Oracle: Check if toast appears and system is at seed state
-    assert page.locator('flt-semantics[aria-label*="thành công"]').is_visible()
+    seed_state = {
+        "Có sẵn": ["BOOK001", "BOOK002", "BOOK005"],
+        "Đang mượn": ["BOOK003"],
+        }
+    for status, book_ids in seed_state.items():
+        for book_id in book_ids:
+            oracle = page.locator(f'flt-semantics[role= "group"]:has-text("{book_id}"):has-text("{status}")')
+            assert oracle.count() > 0, f"{book_id} should have status {status} after  data reset"
 
 def test_extra_overdue_check(page, test_config):
     """B1-2: Verify Librarian's 'Check Overdue' scan (REQ-06)."""
@@ -150,22 +160,26 @@ def test_extra_overdue_check(page, test_config):
     enable_flutter_semantics(page)
 
     # [I] Action: Trigger overdue scan logic
-    flutter_click_button(page, "Kiểm tra quá hạn")
+    borrow_tab = page.locator('flt-semantics[role="tab"][aria-label="Mượn / Trả"]')
+    borrow_tab.click(force= True)
+    enable_flutter_semantics(page)
+    flutter_click_button(page, "Kiểm tra sách quá hạn")
 
     # [P] Propagation: Wait for scan confirmation
-    wait_for_flutter(page, text="Quét hoàn tất")
+    wait_for_flutter(page, text="Đã cập nhật")
     page.screenshot(path=os.path.join(SCREENSHOT_DIR, "tc20_extra_overdue_check.png"))
 
     # [R✓] Strong Oracle: Confirm the feedback message
-    assert page.locator('flt-semantics[aria-label*="Quét hoàn tất"]').is_visible()
+    oracle = page.locator('flt-semantics:has-text("Đã cập nhật")')
+    assert oracle.count() > 0, "Check overdue scan confirmation should be displayed"
 
 # -------------------------------------------------------------------------
 # BONUS B2: DATA-DRIVEN TESTING (Parameterized Language Labels)
 # -------------------------------------------------------------------------
 
 @pytest.mark.parametrize("lang_btn, expected_keyword, case_id", [
-    ("EN", "Logout", "EN_Check"),
-    ("VN", "Đăng xuất", "VN_Check"),
+    ("EN", "Sign out", "EN_Check"),
+    ("VI", "Đăng xuất", "VN_Check"),
 ])
 def test_language_data_driven(page, test_config, lang_btn, expected_keyword, case_id):
     """B2: Verify multiple language transitions using parametrization."""
