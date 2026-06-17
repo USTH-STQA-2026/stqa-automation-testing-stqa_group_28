@@ -61,20 +61,21 @@ Chúng ta thường chia kiểm thử thành **Hộp đen** (Black-box — chỉ
 
    | # | Nguồn gốc | Test Value (Mô tả) | Dữ liệu cụ thể |
    |---|---|---|---|
-   | 1 | Từ SRS (Black-box) | `<!-- Nhóm tự điền -->` | |
-   | 2 | Từ SRS (Black-box) | | |
-   | 3 | Từ SRS (Black-box) | | |
-   | 4 | Từ Code (White-box) | | |
-   | 5 | Từ Code (White-box) | | |
-   | 6 | Từ Code (White-box) | | |
+   | 1 | Từ SRS (Black-box) | Thành viên hoạt động mượn sách có sẵn | MEM003 (Active) + BOOK001 (Available) |
+   | 2 | Từ SRS (Black-box) | Thành viên tạm ngưng bị từ chối mượn | MEM004 (cu.le) + BOOK002 |
+   | 3 | Từ SRS (Black-box) | Mượn vượt giới hạn 3 cuốn bị từ chối | MEM002 đã mượn 3 sách, mượn tiếp BOOK004 |
+   | 4 | Từ Code (White-box) | Tài khoản hết hạn (expired == true) | MEM005 (binh.pham) |
+   | 5 | Từ Code (White-box) | Sách không có sẵn (isAvailable == false) | BOOK003 (đã bị mượn bởi ba.nguyen) |
+   | 6 | Từ Code (White-box) | Kiểm tra ranh giới số lượng (borrowCount == 3) | Thành viên đang mượn đúng 3 cuốn |
 
 4. **Câu hỏi thảo luận:**
 
    a. Các giá trị test từ SRS và từ Code có **khác nhau** không? Có trùng nhau không?
-
+   - Các giá trị test từ SRS tập trung vào việc thỏa mãn các quy tắc nghiệp vụ (Business Rules) từ góc nhìn người dùng. Trong khi đó, các giá trị từ Code tập trung vào việc thực thi các nhánh điều kiện cụ thể (if-else) trong logic lập trình. Chúng thường trùng nhau vì code được viết để hiện thực hóa SRS, nhưng code có thể giúp tester xác định các giá trị biên kỹ thuật chính xác hơn (như toán tử >= thay vì >).
    b. Tại sao hỏi *"Test này là Black-box hay White-box?"* lại là **câu hỏi sai**? Ta nên hỏi gì thay thế?
-
+   - Theo giáo trình, sự phân biệt này là tùy tiện và đã lỗi thời. Việc quá tập trung vào "chiếc hộp" khiến tester quên mất mục tiêu quan trọng nhất là tìm ra cấu trúc của hệ thống để thiết kế test hiệu quả
    c. **Gợi ý:** SRS là một **model** ở mức trừu tượng cao, code Dart là **model** ở mức thấp — cả hai đều là model. Câu hỏi đúng: *"Test được thiết kế từ model nào?"*
+   - Trong đó, SRS là một mô hình ở mức trừu tượng cao, còn Code là một mô hình ở mức trừu tượng thấp của cùng một hệ thống.
 
 ---
 
@@ -108,12 +109,12 @@ Nhóm bạn đang kiểm thử tính năng "Tìm kiếm sách" (TC-05: tìm ki�
 2. **Câu hỏi thảo luận:**
 
    a. Bug đã **Reach** → **Infect** → **Propagate** ra UI. Vậy **bước nào** bị gãy? Tại sao?
-
+   - Bước Revealability (Khả năng bộc lộ) bị gãy. Mặc dù lỗi đã lan truyền ra UI (Propagate), nhưng tester đã không phát hiện ra vì họ đang sử dụng một Null Oracle (chỉ kiểm tra xem hệ thống có crash hay hiện lỗi không) thay vì kiểm tra dữ liệu thực tế. Lỗi đã "hiển thị ngay trước mắt" nhưng không được ghi nhận.
    b. **Revealability** bị gãy vì **Test Oracle yếu**: "Kết quả mong đợi" quá chung chung. Hãy viết lại KQ mong đợi sao cho **rõ ràng, kiểm chứng được**:
 
    | | Trước (yếu) | Sau (mạnh) |
    |---|---|---|
-   | KQ mong đợi | "Không có lỗi" | `<!-- Nhóm viết lại -->` |
+   | KQ mong đợi | "Không có lỗi" | Danh sách hiển thị phải rỗng (0 card sách), đồng thời hiển thị chính xác thông báo 'Không tìm thấy sách' theo REQ-03. |
 
    c. Nếu bạn làm **automation** (bài A2), dòng `assert` trong code tương đương với điều gì trong manual testing? (Gợi ý: "Kết quả mong đợi" = Test Oracle)
 
@@ -144,22 +145,30 @@ Theo góc nhìn Agile và TDD:
 2. **Câu hỏi thảo luận:**
 
    a. Nếu file `SRS-library-system.md` **bị xóa mất**, liệu một lập trình viên mới có thể **chỉ nhìn** vào TC-08 ~ TC-10 để code lại tính năng mượn/trả sách không? Vì sao?
-
+   - Không hoàn toàn. Lý do:
+   + Test case (TC-08~10) chỉ mô tả các kịch bản sử dụng cụ thể (vết cắt của hành vi), nhưng thiếu cái nhìn tổng thể về cấu trúc dữ liệu và các ràng buộc hệ thống.
+   + Nhiều quy tắc nghiệp vụ ngầm định hoặc ràng buộc kỹ thuật (như việc dữ liệu chỉ lưu ở client-side, không có database thật) thường không xuất hiện đầy đủ trong các bước test thành công.
+   + Nếu chỉ nhìn vào 3 TC này, dev có thể bỏ lỡ các logic quan trọng khác như: giới hạn mượn 3 cuốn (REQ-04) hoặc xử lý quá hạn (REQ-06).
    b. Liệt kê **những thông tin nghiệp vụ** mà TC-08 (Mượn sách) cho biết:
 
    | # | Thông tin (đọc được từ test) | Nguồn |
    |---|---|---|
-   | 1 | `<!-- Nhóm tự điền -->` | |
-   | 2 | | |
-   | 3 | | |
+   | 1 | Thông báo thành công: Chuỗi ký tự chính xác phải là "Mượn sách thành công" | success_toast assertion |
+   | 2 | Chuyển đổi trạng thái: Sách từ "Có sẵn" (Available) phải chuyển ngay sang "Đang mượn" (Borrowed) | borrowed_status assertion |
+   | 3 | Quy trình tương tác: Phải có bước xác nhận (Confirmation Dialog) sau khi nhấn nút mượn ban đầu | Bước Act trong test script |
 
    c. **Giới hạn**: Góc nhìn "Test là tài liệu" yếu ở đâu?
       - Kịch bản người dùng thao tác sai (negative) mà chưa nghĩ tới?
+      + Kịch bản thao tác sai: Nếu test suite chỉ tập trung vào "Happy Path", nó sẽ thiếu các logic chặn lỗi (ví dụ: mượn sách đã có người mượn).
       - Yêu cầu phi chức năng (hiệu suất, bảo mật)?
+      + Yêu cầu phi chức năng: Các yếu tố về bảo mật (REQ-08: không xem được phiếu người khác) hoặc hiệu suất thường không nằm trong các TC chức năng cơ bản.
       - Nghiệp vụ thay đổi mà test chưa cập nhật?
+      + Tính nhất quán của dữ liệu: Cách hệ thống khởi tạo (Seed Data) và reset dữ liệu khi refresh trang.
 
    d. **Kết luận nhóm:** SRS và Test Suite nên **cùng tồn tại** hay chỉ cần 1 trong 2? Giải thích.
-
+   - Kết luận: Cả hai phải cùng tồn tại.
+   + SRS là "Nguồn sự thật" (Source of Truth): Dùng để định hướng thiết kế và làm căn cứ pháp lý/nghiệp vụ giữa khách hàng và team dev.
+   + Test Suite là "Đặc tả thực tế" (Living Specification): Đảm bảo rằng những gì SRS yêu cầu đang thực sự hoạt động trong code và bảo vệ hệ thống khỏi lỗi cũ khi có thay đổi (Regression Testing).
 ---
 
 ## Bài tập 4: Vòng đời cuốn sách — Đồ thị trạng thái / The Book Lifecycle FSM
@@ -215,26 +224,30 @@ Suy ra test paths để **mỗi transition được thực hiện ít nhất 1 l
 
 | Test Path | Chuỗi trạng thái | Transitions bao phủ |
 |-----------|------------------|---------------------|
-| TP1 | S1 → S2 → S1 | `<!-- Nhóm tự điền -->` |
-| TP2 | `<!-- Nhóm tự điền -->` | |
-| TP3 | | |
+| TP1 | S1 → S2 → S1 | T1, T2 (Mượn và trả đúng hạn) |
+| TP2 | S1 → S2 → S3 → S1 | T1, T3, T4 (Mượn, quá hạn và trả trễ) |
+| TP3 | S1 → S2 → S3 → S4 | T1, T3, T5 (Mượn, quá hạn và báo mất) |
 
 ### Bước 4: Ánh xạ với Test Case
 
 | Test Path | TC tương ứng | Đã được cover? |
 |-----------|-------------|---------------|
-| TP1 (mượn → trả) | `<!-- Nhóm tự điền -->` | |
-| TP2 | | |
-| TP3 | | |
+| TP1 (mượn → trả) | TC-08 (Mượn) + TC-10 (Trả) | ✅ Đã được cover |
+| TP2 | REQ-06 (Thủ thư quét quá hạn) + Trả sách | 🔴 Chưa có TC tự động cụ thể |
+| TP3 | Chức năng báo mất sách | 🔴 Chưa có TC |
 
 ### Câu hỏi thảo luận
 
 a. **Những transition nào** chưa có TC cover? Thiết kế TC mới cho chúng.
-
+   - Các chuyển tiếp T3, T4, T5 chưa được kiểm thử đầy đủ trong bộ TC-01 đến TC-12.
+   - Thiết kế TC mới:
+      + TC-16 (Overdue Check): Đăng nhập Thủ thư → Nhấn "Kiểm tra quá hạn" → Xác nhận sách quá hạn chuyển sang trạng thái "Quá hạn" (T3).
+      + TC-17 (Return Late): Thành viên có sách quá hạn → Nhấn "Trả sách" → Xác nhận sách về trạng thái "Có sẵn" và hiện cảnh báo trễ (T4).
 b. Hệ thống có **BUG-07** (off-by-one ở kiểm tra quá hạn) — BUG này nằm ở transition nào? Vì sao Edge Coverage **bắt buộc** phải test transition đó?
-
+   - BUG-07 nằm ở transition T3 (Kiểm tra quá hạn).
+   - Lý do: Edge Coverage yêu cầu test set phải đi qua mọi cạnh của đồ thị. Vì T3 là một nhánh logic độc lập (nếu không test T3, ta chỉ test mượn-trả thành công), nên tester buộc phải tạo kịch bản quét quá hạn để xác nhận logic dueDate <= today hoạt động chính xác.
 c. Nếu thêm tính năng "Tìm lại sách" (S4 → S1), FSM thay đổi thế nào?
-
+   - Đồ thị sẽ thêm một cạnh mới (Edge) nối từ S4 (Thất lạc) quay ngược lại S1 (Có sẵn). Điều này tạo thêm một Test Requirement mới cho bộ test để đảm bảo tính năng khôi phục sách hoạt động đúng.
 ---
 
 ## Bài tập 5: Oracle mạnh vs Oracle yếu / The Oracle Strength Challenge
@@ -273,13 +286,17 @@ for i in range(results.count()):
 
    | Oracle | Loại | Phát hiện BUG-06? | Giải thích |
    |--------|------|-------------------|------------|
-   | A | `<!-- Nhóm tự điền -->` | | |
-   | B | | | |
-   | C | | | |
+   | A | Null Oracle | Không | Chỉ xác nhận trang không bị sập. Nếu bộ lọc lỗi trả về 0 kết quả, bài test vẫn PASS dù người dùng không thấy gì |
+   | B | Weak Oracle | Không | URL có thể đúng nhưng logic hiển thị ở giao diện vẫn có thể sai. Nó không chứng minh được dữ liệu thực tế đã thay đổi |
+   | C | Strong Oracle | Có | Trực tiếp kiểm tra nội dung hiển thị. Nếu gõ "công nghệ" (viết thường) mà hệ thống không hiện sách nào, bước kiểm tra số lượng và nội dung sẽ FAIL ngay lập tức |
 
 2. Theo textbook, Oracle C có cần kiểm tra **tất cả** sách không? Hay chỉ cần output **liên quan trực tiếp** đến mục đích test?
-
+   - Theo textbook, Oracle C không cần kiểm tra toàn bộ thuộc tính của mọi cuốn sách trên hệ thống. Khái niệm "Low precision is okay" cho phép tester chỉ tập trung vào các kết quả đầu ra bị tác động trực tiếp bởi mục đích test. Trong trường hợp này, chỉ cần kiểm tra nhãn thể loại của các card sách đang hiển thị trên màn hình là đủ để xác nhận tính Revealability.
 3. Trong file `tests/test_search.py`, tìm assertion hiện tại cho TC-06. Nó thuộc cấp Oracle nào? Có thể cải thiện không?
+   - Trong file tests/test_search.py, đoạn code xử lý assertion cho TC-06 như sau:
+      + Mã nguồn: Lặp qua danh sách book_locators và dùng assert target_category in aria_label.
+      + Phân loại: Đây là một Strong Oracle vì nó không chỉ kiểm tra sự tồn tại của card sách mà còn thẩm định nội dung nghiệp vụ (aria-label) bên trong từng card.
+      + Cải thiện: Có thể nâng cấp thêm bằng cách kiểm tra một mã sách cụ thể trong Seed Data (ví dụ: BOOK001) phải có mặt để đảm bảo bộ lọc không chỉ đúng về loại mà còn đúng về dữ liệu
 
 ---
 
@@ -307,27 +324,30 @@ for i in range(results.count()):
 
    | TC | Mô tả | Sẽ FAIL? | Phải chạy lại? | Lý do |
    |-----|-------|---------|---------------|-------|
-   | TC-01 | Đăng nhập thành công | `<!-- Nhóm tự điền -->` | | |
-   | TC-02 | Đăng nhập sai mật khẩu | | | |
-   | TC-03 | Đăng nhập bỏ trống | | | |
-   | TC-04 | Tìm kiếm có kết quả | | | |
-   | TC-05 | Tìm kiếm không kết quả | | | |
-   | TC-06 | Lọc theo thể loại | | | |
-   | TC-07 | Tìm theo tác giả | | | |
-   | TC-08 | Mượn sách | | | |
-   | TC-09 | Xem sách đang mượn | | | |
-   | TC-10 | Trả sách | | | |
-   | TC-11 | Đăng xuất | | | |
-   | TC-12 | Chuyển ngôn ngữ | | | |
+   | TC-01 | Đăng nhập thành công | Không | Không | Không liên quan đến logic mượn sách |
+   | TC-02 | Đăng nhập sai mật khẩu | Không | Không | Không liên quan đến logic mượn sách |
+   | TC-03 | Đăng nhập bỏ trống | Không | Không | Không liên quan đến logic mượn sách |
+   | TC-04 | Tìm kiếm có kết quả | Không | Không | Không liên quan đến logic mượn sách |
+   | TC-05 | Tìm kiếm không kết quả | Không | Không | Không liên quan đến logic mượn sách |
+   | TC-06 | Lọc theo thể loại | Không | Không | Không liên quan đến logic mượn sách |
+   | TC-07 | Tìm theo tác giả | Không | Không | Không liên quan đến logic mượn sách |
+   | TC-08 | Mượn sách | Có thể | Có | Nếu kịch bản mượn đến cuốn thứ 3 sẽ FAIL. Cần xác nhận mượn 1-2 cuốn vẫn OK. |
+   | TC-09 | Xem sách đang mượn | Không | Có | Đảm bảo UI vẫn hiển thị đúng số lượng sách trong giới hạn mới. |
+   | TC-10 | Trả sách | Không | Có | Kiểm tra việc trả sách giúp giải phóng giới hạn (từ 2 về 1) có hoạt động đúng không. |
+   | TC-11 | Đăng xuất | Không | Không | Các chức năng hạ tầng, không bị ảnh hưởng bởi logic mượn. |
+   | TC-12 | Chuyển ngôn ngữ | Không | Không | Các chức năng hạ tầng, không bị ảnh hưởng bởi logic mượn. |
 
 2. **Câu hỏi thảo luận:**
 
    a. TC nào **chắc chắn FAIL** do thay đổi?
+   - Bất kỳ test case nào có kịch bản mượn cuốn sách thứ 3 (trước đây hợp lệ, nay bị từ chối) sẽ chắc chắn FAIL. Ngoài ra, các test case kiểm tra biên (như TC mượn cuốn thứ 4 để kiểm tra lỗi) nay cũng phải cập nhật lại dữ liệu đầu vào thành cuốn thứ 3.
 
    b. TC-08 (mượn bình thường) không FAIL — nhưng vì sao vẫn **phải chạy lại**?
+   - Vì TC-08 chạm trực tiếp vào nhánh logic vừa bị sửa đổi (điều kiện kiểm tra borrowCount). Theo nguyên lý kiểm thử hồi quy, ta phải chạy lại để đảm bảo thay đổi mới không gây ra tác dụng phụ làm hỏng những gì vốn đang chạy tốt (ví dụ: mượn cuốn thứ 1 cũng bị lỗi chẳng hạn).
 
    c. Nếu 12 TC được **tự động hóa** (chạy ~2–3 phút) vs **thủ công** (chạy ~2–3 giờ), chiến lược nào hợp lý hơn: Retest-All hay Selective?
-
+   - Nếu là Automation (~3 phút): Nên chọn Retest-All. Vì thời gian chạy rất nhanh, việc chạy lại toàn bộ giúp đảm bảo an toàn tuyệt đối mà không tốn thêm nhiều nguồn lực máy móc.
+   - Nếu là Manual (~3 giờ): Nên chọn Selective. Do chi phí nhân công và thời gian cao, tester chỉ nên tập trung vào các kịch bản bị ảnh hưởng (mượn/trả/xem phiếu) để tối ưu hóa năng suất (Goldilocks problem).
 ---
 
 ## Bài tập 7: Tư duy đột biến — Kill the Mutant
@@ -353,9 +373,9 @@ if (currentBorrowCount > maxBooksPerMember)
 
 | Số sách đang mượn | Code đúng (`>=`) | Code lỗi (`>`) | Kill mutant? |
 |-------------------|-----------------|----------------|-------------|
-| 2 | Cho mượn | Cho mượn | Không — cùng KQ |
-| 3 | `<!-- Nhóm tự điền -->` | | |
-| 4 | | | |
+| 2 | Cho mượn | Cho mượn | Không - cùng KQ |
+| 3 | Từ chối | Cho mượn | Có - Khác KQ |
+| 4 | Từ chối | Từ chối | Không - cùng KQ |
 
 ### Tình huống 2: BUG-07 — Kiểm tra quá hạn
 
@@ -371,18 +391,20 @@ Sách mượn 1/9, hạn trả 15/9. Ngày nào giết mutant?
 
 | Ngày kiểm tra | Code đúng | Code lỗi | Kill? |
 |--------------|----------|---------|-------|
-| 14/9 | Chưa quá hạn | Chưa quá hạn | `<!-- Nhóm tự điền -->` |
-| **15/9** | | | |
-| 16/9 | | | |
+| 14/9 | Chưa quá hạn | Chưa quá hạn | Không|
+| **15/9** | Quá hạn | Chưa quá hạn | Có |
+| 16/9 | Quá hạn | Quá hạn | Không |
 
 ### Câu hỏi tổng kết
 
 a. Giá trị test giết mutant luôn nằm ở đâu? (Gợi ý: **giá trị biên** — BVA, Ch.6)
-
+   - Giá trị giết được mutant luôn nằm chính xác tại giá trị biên (Boundary Values)
+.
 b. Tại sao *"thiết kế test data tốt bằng BVA tự động giết được hầu hết ROR mutants"*?
-
+   - Vì các đột biến ROR (thay đổi toán tử quan hệ như >= thành >) chỉ làm thay đổi logic hành vi tại duy nhất điểm ranh giới. BVA tập trung kiểm thử đúng các điểm này nên có khả năng phát hiện lỗi cao nhất.
 c. **Liên hệ RIPR:** Giá trị biên đảm bảo **Infection** (trạng thái khác nhau giữa code đúng và code lỗi). Nếu dùng giá trị xa biên (ví dụ: 0), tại sao mutant **sống sót**?
-
+   - Giá trị xa biên (như 0) khiến cả code đúng và code lỗi đều trả về cùng một kết quả (ví dụ: 0 >= 3 và 0 > 3 đều là False). Do đó, trạng thái hệ thống không bị biến đổi khác đi (Infection không xảy ra hoặc không Propagate ra ngoài), dẫn đến mutant sống sót vì lỗi không được bộc lộ (Revealability)
+.
 ---
 
 ## Bài tập 8: Chiếc bẫy Logic (The Logic Trap)
