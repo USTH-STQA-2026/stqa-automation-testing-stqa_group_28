@@ -117,7 +117,8 @@ Nhóm bạn đang kiểm thử tính năng "Tìm kiếm sách" (TC-05: tìm ki�
    | KQ mong đợi | "Không có lỗi" | Danh sách hiển thị phải rỗng (0 card sách), đồng thời hiển thị chính xác thông báo 'Không tìm thấy sách' theo REQ-03. |
 
    c. Nếu bạn làm **automation** (bài A2), dòng `assert` trong code tương đương với điều gì trong manual testing? (Gợi ý: "Kết quả mong đợi" = Test Oracle)
-
+   - Dòng assert trong code automation tương đương với bước kiểm tra "Kết quả mong đợi" (Expected Result) trong manual testing.
+   - Về mặt thuật ngữ chuyên môn, cả hai đều đóng vai trò là một Test Oracle — cơ chế để phân định bài test là PASS hay FAIL dựa trên bằng chứng thực tế.
 ---
 
 ## Bài tập 3: Ai bảo vệ phần mềm? (Test Suite vs SRS)
@@ -428,7 +429,7 @@ Khái niệm **determination** (quyết định) cho phép phát hiện bug ở 
 > *"Active Clause Coverage (ACC): For each p ∈ P and each major clause ci ∈ Cp, choose minor clauses cj, j ≠ i so that ci determines p. TR has two requirements for each ci: ci evaluates to true and ci evaluates to false."*
 > — Ammann & Offutt, Ch.8, Definition 8.42, p.251
 
-### Kịch bản: REQ-04 — Mượn sách
+cd### Kịch bản: REQ-04 — Mượn sách
 
 Điều kiện để **cho phép mượn sách thành công** là biểu thức logic gồm 3 mệnh đề (clauses):
 
@@ -450,7 +451,8 @@ $$P = A \wedge B \wedge C$$
    | TC-β | F | F | F | **False** | Từ chối ❌ |
 
    **Câu hỏi:** Với chỉ 2 TCs này, hệ thống có bug gì mà bạn **không phát hiện được**?
-
+   - Với chỉ 2 Test Cases của Predicate Coverage (T-T-T và F-F-F), sẽ không phát hiện được BUG-04.
+   - Lý do: TC−β (F,F,F) làm hỏng tất cả các điều kiện cùng lúc. Hệ thống từ chối mượn là đúng, nhưng lỗi thông báo ("Hết hạn" thay vì "Tạm ngưng") bị che lấp bởi các lỗi khác (Sách không sẵn, quá giới hạn).
 2. **Bước 2 — Active Clause Coverage (ACC):** Để test từng clause, phải **cô lập** nó — giữ các clause còn lại ở giá trị cho phép clause đang test **quyết định** (determine) kết quả.
 
    **Nhóm hãy điền bảng truth table sau:**
@@ -458,26 +460,30 @@ $$P = A \wedge B \wedge C$$
    | TC | A | B | C | $P$ | Major clause được test | Giải thích |
    |----|---|---|---|-----|----------------------|-----------|
    | 1 | **T** | T | T | True | A (True → P True) | Cặp với TC2 |
-   | 2 | **F** | T | T | `<!-- Nhóm tự điền -->` | A (False → P ?) | Lật A, B và C giữ nguyên T: P thay đổi? |
+   | 2 | **F** | T | T | False | A (False → P ?) | Lật A, B và C giữ nguyên T: P thay đổi? |
    | 3 | T | **T** | T | True | B (True → P True) | Cặp với TC4 |
-   | 4 | T | **F** | T | | B (False → P ?) | Lật B, A và C giữ nguyên T |
+   | 4 | T | **F** | T | False | B (False → P ?) | Lật B, A và C giữ nguyên T |
    | 5 | T | T | **T** | True | C (True → P True) | Cặp với TC6 |
-   | 6 | T | T | **F** | | C (False → P ?) | Lật C, A và B giữ nguyên T |
+   | 6 | T | T | **F** | False | C (False → P ?) | Lật C, A và B giữ nguyên T |
 
    > **Lưu ý:** Nhiều TCs có thể trùng nhau. Sau khi loại bỏ trùng lặp, ACC cần tối thiểu bao nhiêu test cases cho `A AND B AND C`?
+   - Sau khi loại bỏ các dòng trùng lặp, bộ test đạt Active Clause Coverage (ACC) cho biểu thức `A AND B AND C` cần tối thiểu 4 test cases.
 
 3. **Bước 3 — Phát hiện bug BUG-04:**
 
    Bug thực tế trong hệ thống: BUG-04 — thành viên "Tạm ngưng" nhận thông báo lỗi sai ("Thành viên đã hết hạn" thay vì "đang bị tạm ngưng"). TC nào trong bảng ACC ở trên sẽ **phát hiện** BUG-04? TC-α và TC-β của Predicate Coverage có phát hiện được không?
-
+   - TC phát hiện BUG-04: TC 6 (T, T, F). Tại kịch bản này, chỉ có duy nhất mệnh đề C (trạng thái thành viên) là False trong khi các điều kiện khác đều True, giúp cô lập hoàn toàn lỗi thông báo sai.
+   - TC-α và TC-β có phát hiện được không? - KHÔNG.
+      + TC-α là kịch bản thành công (Happy Path) nên không thể kích hoạt logic báo lỗi.
+      + TC-β (F, F, F) gặp hiệu ứng che lấp (masking): vì tất cả các điều kiện đều hỏng cùng lúc, hệ thống từ chối mượn là đúng, nhưng tester không thể phân biệt được thông báo bị sai cho riêng trạng thái "Tạm ngưng".
 ### Câu hỏi thảo luận
 
 a. Với `A AND B AND C`, Predicate Coverage cần 2 TCs, ACC cần bao nhiêu? Tại sao con số tăng lên là **xứng đáng**?
-
+   - Với A∧B∧C, PC cần 2 TCs, trong khi ACC cần 4 TCs (N+1). Con số này tăng lên là xứng đáng vì nó giúp cô lập lỗi ở từng điều kiện con, tránh hiện tượng "che lấp lỗi" (masking effect).
 b. Trong thực tế, FAA yêu cầu **MC/DC** (tương đương ACC) cho phần mềm điều khiển máy bay. Tại sao chỉ dùng Predicate Coverage cho phần mềm hàng không là **nguy hiểm**?
-
+   - Trong các hệ thống an toàn cao (safety-critical), việc một cảm biến hay điều kiện logic bị hỏng mà không bộc lộ ra ngoài (do bị che lấp bởi các điều kiện khác trong test bundle) có thể dẫn đến thảm họa khi điều kiện đó thực sự bị lật trong thực tế. ACC/MCDC đảm bảo mọi thay đổi của từng đầu vào đều có tác động kiểm chứng được tới đầu ra.
 c. **Kết nối BT7 (Mutation):** Nếu lập trình viên viết `OR` thay vì `AND` — đây có phải là một loại **ROR mutant** không? Giá trị test nào giết mutant này?
-
+   - Nếu dev viết OR thay vì AND, đây chính là một loại ROR (Relational Operator Replacement) hoặc COR mutant. Để "diệt" mutant này, ta cần dùng giá trị test khiến hai biểu thức trả về kết quả khác nhau (ví dụ: T,F,T). Với AND kết quả là False, với OR kết quả là True → Mutant bị tiêu diệt.
 ---
 
 ## Bài tập 9: Kẻ phá hoại bất ổn — Flaky Tests
@@ -521,21 +527,24 @@ def wait_for_flutter(page, text=None, selector=None, timeout=10000):
 
    | Lần chạy | `wait_for_flutter` (Smart Wait) | `time.sleep(0.1)` (Hard Sleep) |
    |----------|-------------------------------|-------------------------------|
-   | 1 | ✅ PASS | `<!-- Nhóm dự đoán -->` |
-   | 2 | ✅ PASS | |
-   | ... | ✅ PASS | |
-   | 10 | ✅ PASS | |
+   | 1 | ✅ PASS | ❌ FAIL (nếu Flutter render > 0.1s) |
+   | 2 | ✅ PASS | ✅ PASS (nếu Flutter render < 0.1s) |
+   | ... | ✅ PASS | 	❌ FAIL |
+   | 10 | ✅ PASS | ✅ PASS |
 
 2. **Giải thích kỹ thuật:** Vì sao `wait_for_flutter` **ổn định** (deterministic) còn `time.sleep(0.1)` **bất ổn** (non-deterministic)?
-
+   - wait_for_flutter là ổn định (deterministic): Vì nó chủ động lắng nghe sự kiện — test chỉ tiếp tục khi và chỉ khi phần tử đã thực sự xuất hiện trong Semantics Tree.
+   - time.sleep(0.1) là bất ổn (non-deterministic): Vì thời gian render của Flutter là biến thiên tùy thuộc vào tài nguyên máy tính; nếu một lần render mất 0.11s, time.sleep(0.1) sẽ kết thúc trước khi có UI, dẫn đến test bị gãy.
 3. **Kết nối với Ch.4:** Tác giả nói test phải *"be good AND fast"*. Nếu bạn dùng `time.sleep(5)` (chờ dài) để tránh flaky, bạn hy sinh yếu tố nào? Nếu hệ thống CI chạy 12 TCs × 5 giây sleep mỗi bước × 10 bước = bao nhiêu phút? Có còn **"immediate verification"** không?
-
+   - Yếu tố bị hy sinh: Nếu dùng time.sleep(5) để tránh flaky, bạn đang hy sinh Tốc độ (Speed).
+   - Tính toán thời gian: 12 TCs × 5s × 10 bước = 600 giây = 10 phút.
+   - Hệ quả: Việc phải đợi 10 phút cho một bộ test nhỏ làm mất đi tính chất "xác minh tức thì" (immediate verification), khiến lập trình viên ngại chạy test thường xuyên và làm chậm chu kỳ phản hồi.
 4. **Câu hỏi trắc nghiệm (chọn 1):** Hàm `wait_for_flutter` thuộc thành phần nào trong kiến trúc test?
    - (a) Test Oracle
    - (b) Test Driver
-   - (c) Test Harness infrastructure
+   - **(c) Test Harness infrastructure**
    - (d) Test Data
-
+      + Giải thích: Các hàm hỗ trợ như wait_for_flutter là một phần của hạ tầng giúp bộ test vận hành ổn định và hiệu quả trên một công nghệ cụ thể (Flutter Web).
 ---
 
 ## Phụ lục: Ánh xạ bài tập ↔ textbook
